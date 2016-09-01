@@ -10,13 +10,13 @@ PB.runProtoc in PB.protobufConfig := { args =>
   com.github.os72.protocjar.Protoc.runProtoc("-v300" +: args.toArray)
 }
 
-libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % (PB.scalapbVersion in PB.protobufConfig).value
+libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % "0.5.40"
 
-libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % (PB.scalapbVersion in PB.protobufConfig).value % PB.protobufConfig
+libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % "0.5.40" % PB.protobufConfig
 
 libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-json4s" % "0.1.1"
 
-libraryDependencies += "io.grpc" % "grpc-netty" % "1.0.0-pre1"
+libraryDependencies += "io.grpc" % "grpc-netty" % "1.0.0"
 
 scalaVersion := "2.11.8"
 

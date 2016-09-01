@@ -3,9 +3,8 @@ package io.grpc.examples.errorhandling
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import com.google.common.base.Verify
-import com.google.protobuf.InvalidProtocolBufferException
 import com.google.rpc.DebugInfo
-import com.trueaccord.scalapb.GeneratedMessage
+import com.trueaccord.scalapb.grpc.ProtoUtils
 import io.grpc._
 import io.grpc.examples.errorhandling.DetailErrorSample._
 import io.grpc.examples.helloworld.GreeterGrpc.Greeter
@@ -16,7 +15,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object DetailErrorSample {
-  private val DEBUG_INFO_TRAILER_KEY = keyForProto(DebugInfo.defaultInstance)
+  private val DEBUG_INFO_TRAILER_KEY = ProtoUtils.keyForProto[DebugInfo]
   private val DEBUG_INFO =
     DebugInfo(Seq("stack_entry_1", "stack_entry_2", "stack_entry_3"),
       "detailed error info.")
@@ -34,24 +33,6 @@ object DetailErrorSample {
     Verify.verify(status.getDescription.equals(DEBUG_DESC))
     Verify.verify(trailers.get(DEBUG_INFO_TRAILER_KEY).equals(DEBUG_INFO))
   }
-
-  def metadataMarshaller[T <: GeneratedMessage](instance: T): Metadata.BinaryMarshaller[T] =
-    new Metadata.BinaryMarshaller[T] {
-      override def toBytes(value: T) = value.toByteArray
-
-      override def parseBytes(serialized: Array[Byte]) = {
-        try {
-          instance.companion.parseFrom(serialized).asInstanceOf[T]
-        } catch {
-          case ipbe: InvalidProtocolBufferException =>
-            throw new IllegalArgumentException(ipbe)
-        }
-      }
-    }
-
-  def keyForProto[T <: GeneratedMessage](instance: T): Metadata.Key[T] =
-    Metadata.Key.of(instance.companion.descriptor.getFullName + Metadata.BINARY_HEADER_SUFFIX,
-      metadataMarshaller(instance))
 }
 
 class DetailErrorSample {

@@ -4,10 +4,10 @@ import java.util
 import java.util.Collections
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import java.util.logging.{Level, Logger}
-import java.lang.Math.{toRadians, sin, cos, sqrt, atan2}
+import java.lang.Math.{atan2, cos, sin, sqrt, toRadians}
 
 import io.grpc.stub.StreamObserver
-import io.grpc.{Server, ServerBuilder}
+import io.grpc.{Server, ServerBuilder, Status}
 import RouteGuideServer._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -66,7 +66,7 @@ object RouteGuideServer{
       responseObserver.onCompleted()
     }
 
-    def recordRoute(responseObserver: StreamObserver[RouteSummary]): StreamObserver[Point] =
+    def recordRoute(responseObserver: StreamObserver[RouteSummary]): StreamObserver[Point] = {
       new StreamObserver[Point] {
         var pointCount = 0
         var featureCount = 0
@@ -78,6 +78,7 @@ object RouteGuideServer{
 
         def onCompleted() = {
           val seconds = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime)
+          logger.log(Level.WARNING, "test recordRoute cancelled") // test
           responseObserver.onNext(
             RouteSummary(pointCount, featureCount, distance, seconds.toInt))
           responseObserver.onCompleted()
@@ -85,13 +86,17 @@ object RouteGuideServer{
 
         def onNext(point: Point) = {
           pointCount += 1
-          if(RouteGuideUtil.exists(checkFeature(point))) featureCount += 1
+          if (RouteGuideUtil.exists(checkFeature(point))) featureCount += 1
 
-          if(previous != null) distance += calcDistance(previous, point).toInt
+          if (previous != null) distance += calcDistance(previous, point).toInt
 
           previous = point
+
+          logger.log(Level.WARNING, "test recordRoute before cancelled") // test
+          responseObserver.onError(Status.ABORTED.asRuntimeException())
         }
       }
+    }
 
     def routeChat(responseObserver: StreamObserver[RouteNote]): StreamObserver[RouteNote] =
       new StreamObserver[RouteNote] {
